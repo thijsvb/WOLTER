@@ -2,7 +2,7 @@ import processing.serial.*;
 Serial port;
 
 float x, y;
-float alx1, aly1, alx2, aly2;
+float alx1, aly1, alx2, aly2, alx3, aly3;
 float blx1, bly1, blx2, bly2;
 float xa, ya;
 float mb, xb1, yb1, xb2, yb2;
@@ -47,8 +47,11 @@ void draw() {
   triangle(width, 0, xb1, yb1, xb2, yb2);
   
   stroke(0,0,255);
+  strokeWeight(3);
   line(alx1, aly1, alx2, aly2);
   line(blx1, bly1, blx2, bly2);
+  strokeWeight(1);
+  line(alx1, aly1, alx3, aly3);
   
   noStroke();
   fill(255, 0, 0);
@@ -69,5 +72,8 @@ void serialEvent(Serial port) {
     aly2 = aly1 + 50*sin(a);
     blx2 = blx1 + 50*cos(b);
     bly2 = bly1 + 50*sin(b);
+    
+    alx3 = alx1 + 1000*cos(a);
+    aly3 = aly1 + 1000*sin(a);
   }
 }
