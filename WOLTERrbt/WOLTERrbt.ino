@@ -7,7 +7,7 @@ wolterMover mover;
 
 void setup() {
   Serial.begin(9600);
-  randomSeed(analogRead(A0));
+  randomSeed(analogRead(A4));
 
   // Laser
   pinMode(laserPin, OUTPUT);

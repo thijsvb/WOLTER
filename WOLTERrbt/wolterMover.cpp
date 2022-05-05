@@ -15,9 +15,15 @@ wolterMover::wolterMover() {
 }
 
 void wolterMover::debug() {
+  int alpha = robPar[0] - alpha0;
+  int beta = robPar[1];
+
+  alpha = constrain(alpha, 0, 180);
+  beta = constrain(beta, 0, 180);
+
   // Serial print for debugging/visualisation
   Serial.print(robPar[0]); Serial.print(',');Serial.print(robPar[1]); Serial.print(',');
-  Serial.print(pos[0]); Serial.print(','); Serial.println(pos[1]);
+  Serial.print(pos[0]); Serial.print(','); Serial.println(pos[1]);// Serial.print(alpha);Serial.print(',');Serial.println(beta);
 //  Serial.print(robPar[0]); Serial.print(" - "); Serial.print(alpha0); Serial.print(" = "); Serial.println(robPar[0]-alpha0);
   
 }
