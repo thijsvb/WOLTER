@@ -7,6 +7,7 @@
 class wolterMover {
   public:
     wolterMover();
+    void init();
     void move();
     void setServos();
     void debug();

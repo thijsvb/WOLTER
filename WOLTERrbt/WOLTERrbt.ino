@@ -9,6 +9,8 @@ void setup() {
   Serial.begin(9600);
   randomSeed(analogRead(A4));
 
+  mover.init();
+
   // Laser
   pinMode(laserPin, OUTPUT);
   digitalWrite(laserPin, HIGH);

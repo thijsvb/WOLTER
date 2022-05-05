@@ -9,7 +9,9 @@ wolterMover::wolterMover() {
   vel[1] = 0;
   float a = TWO_PI*random(1000)/1000.0;
   rotate(vel, a);
+}
 
+void wolterMover::init() {
   servoA.attach(servoApin);
   servoB.attach(servoBpin);
 }
