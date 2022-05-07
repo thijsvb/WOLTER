@@ -72,6 +72,7 @@ class wolterMover {
     void mult(float* out, float f);
     void add(float* out, float* in);
     void sub(float* out, float* in);
+    void setMag(float* in, float minM, float maxM);
 };
 
 #endif

@@ -117,6 +117,7 @@ void wolterMover::move() {
     add(pos, pvel);
   }
 
+  setMag(vel, vmin, vmax);
   // movement step
   add(pos, vel);
 }
@@ -155,4 +156,19 @@ void wolterMover::add(float* out, float* in) {
 void wolterMover::sub(float* out, float* in) {
   out[0] -= in[0];
   out[1] -= in[1];
+}
+
+void wolterMover::setMag(float* in, float minM, float maxM) {
+  double currMag = sqrt(in[0]*in[0] + in[1]*in[1]);
+  Serial.print("vx=");Serial.print(vel[0],4);Serial.print("#");
+  Serial.print("vy=");Serial.print(vel[1],4);Serial.print("#");
+  Serial.print("|v|=");Serial.print(currMag,4);Serial.print("#");
+  if (currMag > maxM) {
+    in[0] *= maxM/currMag;
+    in[1] *= maxM/currMag;
+  } else {
+    in[0] *= minM/currMag;
+    in[1] *= minM/currMag;
+  }
+  
 }
