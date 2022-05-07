@@ -4,20 +4,26 @@ float xa = 300;
 float ya = 400;
 // yb = 5 xb - 2000
 
-boolean wanderMode = true;
+boolean wanderMode = false;
 
-float maxvel = 4;
-float minvel = 0.2;
+// velocity boundries
+    //const float vmax = 0.06;
+    //const float vmin = 0.003;
+
+float vToPx = 100;
+float maxvel = 0.06*vToPx;
+float minvel = 0.003*vToPx;
 float roff = 0;
 float aoff = 1000;
 float droff = 0.1;
 float daoff = 0.03;
 
 void setup() {
+  frameRate(35);
   size(500, 800);
   noStroke();
   pos = new PVector(250, 200);
-  vel = new PVector(2, 0);
+  vel = new PVector(maxvel, 0);
   vel.rotate(random(TWO_PI));
   
   n = new PVector(1, 0);
