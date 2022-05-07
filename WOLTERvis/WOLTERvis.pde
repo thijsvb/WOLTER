@@ -59,8 +59,13 @@ void draw() {
 }
 
 void serialEvent(Serial port) {
-  String inString = port.readStringUntil('\n');
-  float[] input = float(split(inString, ','));
+  String rawInString = port.readStringUntil('\n');
+  // print debug strings
+  String[] inStrings = split(rawInString, '#');
+  for(int i=0; i!=inStrings.length-1; ++i) {
+    println(inStrings[i]);
+  }
+  float[] input = float(split(inStrings[inStrings.length-1], ','));
   
   if(input.length == 4) {
     println(input[0], input[1]);
