@@ -25,7 +25,10 @@ void wolterMover::debug() {
 
   // Serial print for debugging/visualisation
   Serial.print(robPar[0]); Serial.print(',');Serial.print(robPar[1]); Serial.print(',');
-  Serial.print(pos[0]); Serial.print(','); Serial.println(pos[1]);// Serial.print(alpha);Serial.print(',');Serial.println(beta);
+  Serial.print(pos[0]); Serial.print(','); Serial.println(pos[1]);
+  Serial.print("#");
+//  Serial.print(alpha);Serial.print(',');Serial.println(beta);
+//  Serial.print(robPar[0]); Serial.print(',');Serial.print(robPar[1]); Serial.print(',');
 //  Serial.print(robPar[0]); Serial.print(" - "); Serial.print(alpha0); Serial.print(" = "); Serial.println(robPar[0]-alpha0);
   
 }
@@ -67,6 +70,12 @@ void wolterMover::setServos() {
  */
 
 void wolterMover::move() {
+  // wait to slow down to framerate
+  while(millis() - frameTimer < frameDelay);
+  float measuredFps = 1000/(millis() - frameTimer);
+  Serial.print("fps: ");Serial.print(measuredFps);Serial.print("/");Serial.print(fps);Serial.print("#");
+  frameTimer = millis();
+  
   float pvel[2];
   copy(pvel, vel);
   boolean bounced = false;

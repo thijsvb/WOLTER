@@ -58,6 +58,10 @@ class wolterMover {
     uint32_t aoff = 2e9; // offset so r and a are indep
     uint32_t dr = 100;
     uint32_t da = 30;
+    // framerate
+    const float fps = 35.0;
+    const int frameDelay = int(1000.0/fps); // miliseconds
+    uint32_t frameTimer = 0;
 
     /*
      * 2D VECTOR FUNCTIONS
