@@ -68,7 +68,6 @@ void serialEvent(Serial port) {
   float[] input = float(split(inStrings[inStrings.length-1], ','));
   
   if(input.length == 4) {
-    println(input[0], input[1]);
     x = map(input[2], -4.5, 1.8, 0, width);
     y = map(input[3], -4.95, 2.5, height, 0);
     float a = -radians(input[0]);
