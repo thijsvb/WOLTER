@@ -82,6 +82,7 @@ void move() {
     pos.add(pvel.mult(-1));
   }
   
+  vel.setMag(maxvel);
   pos.add(vel);
 }
 
