@@ -5,15 +5,19 @@
 
 wolterMover::wolterMover() {
   copy(pos, pos0);
-  vel[0] = vmax; 
-  vel[1] = 0;
-  float a = TWO_PI*random(1000)/1000.0;
-  rotate(vel, a);
 }
 
 void wolterMover::init() {
   servoA.attach(servoApin);
   servoB.attach(servoBpin);
+}
+
+int wolterMover::getMode() {
+  return mode;
+}
+
+void wolterMover::setMode(int m) {
+  mode = m;
 }
 
 void wolterMover::debug() {
@@ -26,11 +30,7 @@ void wolterMover::debug() {
   // Serial print for debugging/visualisation
   Serial.print(robPar[0]); Serial.print(',');Serial.print(robPar[1]); Serial.print(',');
   Serial.print(pos[0]); Serial.print(','); Serial.println(pos[1]);
-  Serial.print("#");
-//  Serial.print(alpha);Serial.print(',');Serial.println(beta);
-//  Serial.print(robPar[0]); Serial.print(',');Serial.print(robPar[1]); Serial.print(',');
-//  Serial.print(robPar[0]); Serial.print(" - "); Serial.print(alpha0); Serial.print(" = "); Serial.println(robPar[0]-alpha0);
-  
+  Serial.print("#"); // anything after '#' will be printed in Processing
 }
 
 /*
@@ -58,6 +58,10 @@ void wolterMover::setServos() {
   int alpha = robPar[0] - alpha0;
   int beta = robPar[1];
 
+  // servo calibration, based on measurements
+  alpha = alpha * 180/160;
+  beta = beta * 79/90 + 8;
+  
   alpha = constrain(alpha, 0, 180);
   beta = constrain(beta, 0, 180);
 
@@ -72,52 +76,99 @@ void wolterMover::setServos() {
 void wolterMover::move() {
   // wait to slow down to framerate
   while(millis() - frameTimer < frameDelay);
-  float measuredFps = 1000/(millis() - frameTimer);
-  Serial.print("fps: ");Serial.print(measuredFps);Serial.print("/");Serial.print(fps);Serial.print("#");
+//  float measuredFps = 1000/(millis() - frameTimer);
+//  Serial.print("fps: ");Serial.print(measuredFps);Serial.print("/");Serial.print(fps);Serial.print("#");
   frameTimer = millis();
-  
+
+  /*
+   * VELOCITY
+   */
   float pvel[2];
   copy(pvel, vel);
-  boolean bounced = false;
+  
+  switch(mode) {
+    case 0: // bouncing mode
+      // send dot off if not moving yet
+      if(vel[0]==0 && vel[1]==0) {
+        vel[0] = vmax/2; 
+        vel[1] = 0;
+        float a = TWO_PI*random(1000)/1000.0;
+        rotate(vel, a);
+      }
+      break;
 
-  // walls
-  if(pos[0] < xmin || pos[0] > xmax) {
-    vel[0] = -vel[0];
-    bounced = true;
-  }
-  if(pos[1] < ymin || pos[1] > ymax) {
-    vel[1] = -vel[1];
-    bounced = true;
+    case 2: // joystick mode
+      int joyX = analogRead(joyXpin);
+      int joyY = analogRead(joyYpin);
+      
+      // adjust for joystick deadzones, max and min values; spits out -100 to 100 values
+      if(abs(joyX-joyXmid)>joyXdead) {
+        if(joyX>joyXmid) joyX = map(joyX, joyXmid+joyXdead, joyXmax, 0, 100);
+        else joyX = map(joyX, joyXmid-joyXdead, joyXmin, 0, -100);
+      } else { joyX = 0; }
+      if(abs(joyY-joyYmid)>joyYdead) {
+        if(joyY>joyYmid) joyY = map(joyY, joyYmid+joyYdead, joyYmax, 0, 100);
+        else joyY = map(joyY, joyYmid-joyYdead, joyYmin, 0, -100);
+      } else { joyY = 0; }
+      
+      // set velocity according to joystick values
+      vel[0] = vmax * float(joyX)/100.0;
+      vel[1] = vmax * float(joyY)/100.0;
+      break;
   }
 
-  // obstacle A
-  if(pos[0] < xa && pos[1] < ya) {
-    if((pos[0]-xa) > (pos[1]-ya)) {
-      vel[0] = -vel[0];
-    } else {
-      vel[1] = -vel[1];
+  /*
+   * OBSTACLE / WALLS BOUNCING
+   */
+  if(mode==2) {
+    // for joystick mode just avoid region out of servo reach
+    // obstacle B
+    if(pos[1] > mb*pos[0]) {
+      vel[0] = min(0, vel[0]);
+      vel[1] = min(0, vel[1]);
     }
-    bounced = true;
-  }
+  } else {
+    boolean bounced = false;
+    
+    // walls
+    if(pos[0] < xmin || pos[0] > xmax) {
+      vel[0] = -vel[0];
+      bounced = true;
+    }
+    if(pos[1] < ymin || pos[1] > ymax) {
+      vel[1] = -vel[1];
+      bounced = true;
+    }
+  
+    // obstacle A
+    if(pos[0] < xa && pos[1] < ya) {
+      if((pos[0]-xa) > (pos[1]-ya)) {
+        vel[0] = -vel[0];
+      } else {
+        vel[1] = -vel[1];
+      }
+      bounced = true;
+    }
+  
+    // obstacle B
+    if(pos[1] > mb*pos[0]) {
+      // v = v-2(v*n)n
+      float f = 2*dot(vel, nb);
+      float n2[2];
+      copy(n2, nb);
+      mult(n2, f);
+      sub(vel, n2);
+      bounced = true;
+    }
+  
+    // step back to avoid edge cases
+    if(bounced) {
+      mult(pvel, -1);
+      add(pos, pvel);
+    }
 
-  // obstacle B
-  if(pos[1] > mb*pos[0]) {
-    // v = v-2(v*n)n
-    float f = 2*dot(vel, nb);
-    float n2[2];
-    copy(n2, nb);
-    mult(n2, f);
-    sub(vel, n2);
-    bounced = true;
+    if(mode==0) setMag(vel, vmax/2); // vel might drop due to floating point math
   }
-
-  // step back to avoid edge cases
-  if(bounced) {
-    mult(pvel, -1);
-    add(pos, pvel);
-  }
-
-  setMag(vel, vmin, vmax);
   // movement step
   add(pos, vel);
 }
@@ -158,17 +209,11 @@ void wolterMover::sub(float* out, float* in) {
   out[1] -= in[1];
 }
 
-void wolterMover::setMag(float* in, float minM, float maxM) {
+void wolterMover::setMag(float* in, float setM) {
   double currMag = sqrt(in[0]*in[0] + in[1]*in[1]);
-  Serial.print("vx=");Serial.print(vel[0],4);Serial.print("#");
-  Serial.print("vy=");Serial.print(vel[1],4);Serial.print("#");
-  Serial.print("|v|=");Serial.print(currMag,4);Serial.print("#");
-  if (currMag > maxM) {
-    in[0] *= maxM/currMag;
-    in[1] *= maxM/currMag;
-  } else {
-    in[0] *= minM/currMag;
-    in[1] *= minM/currMag;
-  }
-  
+//  Serial.print("vx=");Serial.print(vel[0],4);Serial.print("#");
+//  Serial.print("vy=");Serial.print(vel[1],4);Serial.print("#");
+//  Serial.print("|v|=");Serial.print(currMag,4);Serial.print("#");
+  in[0] *= setM/currMag;
+  in[1] *= setM/currMag;
 }

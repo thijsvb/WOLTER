@@ -16,10 +16,10 @@ void setup() {
   
   // obstacle constants, converted to pixelspace
   // A
-  xa = map(-0.5, -4.5, 1.8, 0, width);
-  ya = map(-1.25, -4.95, 2.5, height, 0);
+  xa = map(-0.4, -4.5, 1.8, 0, width);
+  ya = map(-1.00, -4.95, 2.5, height, 0);
   // B
-  mb = -3.72;
+  mb = -2.14;
   yb1 = 2.5;
   xb1 = yb1/mb;
   xb2 = 1.8;
@@ -66,7 +66,6 @@ void serialEvent(Serial port) {
     println(inStrings[i]);
   }
   float[] input = float(split(inStrings[inStrings.length-1], ','));
-  
   if(input.length == 4) {
     x = map(input[2], -4.5, 1.8, 0, width);
     y = map(input[3], -4.95, 2.5, height, 0);
