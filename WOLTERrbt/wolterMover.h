@@ -18,7 +18,7 @@ class wolterMover {
     /*
      * CONTROL
      */
-    int mode = 0; 
+    int mode = 3; // start in off mode 
     
     /*
      * ROBOT
@@ -69,14 +69,16 @@ class wolterMover {
     float pos[2], vel[2];
     const float pos0[2] = { -1.5, 0.3};
     // velocity boundries
-    
-    const float vmax = 0.2;
+    const float vmax = 0.15;
     const float vmin = 0.003;
+    const float amax = vmax/10;
     // noise vars
-    uint32_t roff = 0;
-    uint32_t aoff = 2e9; // offset so r and a are indep
-    uint32_t dr = 100;
-    uint32_t da = 30;
+    uint16_t toff = 0;
+    uint16_t aoff = 2e9; // offset so h and a are indep
+    uint16_t dt = 5;
+    uint16_t da = 10;
+    float noiseMax = 255;
+    float turnMax = 0.1;
     // framerate
     const float fps = 30.0;
     const int frameDelay = int(1000.0/fps); // miliseconds
@@ -87,11 +89,12 @@ class wolterMover {
      */
     void copy(float* out, float* in);
     void rotate(float* out, float a);
+    float heading(float* in);
     float dot(float* a, float* b);
     void mult(float* out, float f);
     void add(float* out, float* in);
     void sub(float* out, float* in);
-    void setMag(float* in, float setM);
+    void setMag(float* out, float setM);
 };
 
 #endif

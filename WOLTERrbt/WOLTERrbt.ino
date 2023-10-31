@@ -148,7 +148,6 @@ void setup() {
 
   // Laser
   pinMode(laserPin, OUTPUT);
-  digitalWrite(laserPin, HIGH);
 
   Serial.println("Start");
 }
@@ -179,6 +178,9 @@ void loop() {
       inMenu = false;
     } else if(menu==0) {
       mover.setMode(selectMode);
+      // turn on laser, except in off mode
+      digitalWrite(laserPin, HIGH);
+      if(selectMode==3) digitalWrite(laserPin, LOW);
       inMenu = true;
     } else if(menu==1) {
       timer = selectTimer;
@@ -232,6 +234,7 @@ void loop() {
 
     // turn robot off when timer runs out
     if(minsElapsed >= timer) {
+      digitalWrite(laserPin, LOW);
       mover.setMode(3);
       timer = 0;
       lcd.clear();

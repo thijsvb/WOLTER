@@ -86,35 +86,57 @@ void wolterMover::move() {
   float pvel[2];
   copy(pvel, vel);
   
-  switch(mode) {
-    case 0: // bouncing mode
-      // send dot off if not moving yet
-      if(vel[0]==0 && vel[1]==0) {
-        vel[0] = vmax/2; 
-        vel[1] = 0;
-        float a = TWO_PI*random(1000)/1000.0;
-        rotate(vel, a);
-      }
-      break;
+  if(mode==0) { // bouncing mode
+    // send dot off if not moving yet
+    if(vel[0]==0 && vel[1]==0) {
+      vel[0] = vmax/2; 
+      vel[1] = 0;
+      float a = TWO_PI*random(1000)/1000.0;
+      rotate(vel, a);
+    }
+  } else if(mode==1) { // mouse mode
+    //get noise
+    uint8_t tnoise = inoise8(toff);
+    uint8_t anoise = inoise8(aoff);
+    toff+=dt;
+    aoff+=da;
 
-    case 2: // joystick mode
-      int joyX = analogRead(joyXpin);
-      int joyY = analogRead(joyYpin);
-      
-      // adjust for joystick deadzones, max and min values; spits out -100 to 100 values
-      if(abs(joyX-joyXmid)>joyXdead) {
-        if(joyX>joyXmid) joyX = map(joyX, joyXmid+joyXdead, joyXmax, 0, 100);
-        else joyX = map(joyX, joyXmid-joyXdead, joyXmin, 0, -100);
-      } else { joyX = 0; }
-      if(abs(joyY-joyYmid)>joyYdead) {
-        if(joyY>joyYmid) joyY = map(joyY, joyYmid+joyYdead, joyYmax, 0, 100);
-        else joyY = map(joyY, joyYmid-joyYdead, joyYmin, 0, -100);
-      } else { joyY = 0; }
-      
-      // set velocity according to joystick values
-      vel[0] = vmax * float(joyX)/100.0;
-      vel[1] = vmax * float(joyY)/100.0;
-      break;
+    // calculate turn and apply to current heading
+    float turn = (tnoise/noiseMax)*turnMax;
+    float head = heading(vel);
+    head += turn;
+
+    // calculate acceleration and apply to current velocity
+    float acc = ((anoise/noiseMax)*2-1)*amax;
+    float velMag = sqrt(vel[0]*vel[0] + vel[1]*vel[1]);
+    velMag += acc;
+    velMag = constrain(velMag, 0, vmax);
+
+    // calculate vector
+    vel[0] = velMag;
+    vel[1] = 0;
+    rotate(vel, head);
+  } else if(mode==2) { // joystick mode
+    int joyX = analogRead(joyXpin);
+    int joyY = analogRead(joyYpin);
+    
+    // adjust for joystick deadzones, max and min values; spits out -100 to 100 values
+    if(abs(joyX-joyXmid)>joyXdead) {
+      if(joyX>joyXmid) joyX = map(joyX, joyXmid+joyXdead, joyXmax, 0, 100);
+      else joyX = map(joyX, joyXmid-joyXdead, joyXmin, 0, -100);
+    } else { joyX = 0; }
+    if(abs(joyY-joyYmid)>joyYdead) {
+      if(joyY>joyYmid) joyY = map(joyY, joyYmid+joyYdead, joyYmax, 0, 100);
+      else joyY = map(joyY, joyYmid-joyYdead, joyYmin, 0, -100);
+    } else { joyY = 0; }
+    
+    // set velocity according to joystick values
+    vel[0] = vmax * float(joyX)/100.0;
+    vel[1] = vmax * float(joyY)/100.0;
+  } else if(mode==3) { //off mode
+    vel[0] = 0;
+    vel[1] = 0;
+    copy(pos, pos0);
   }
 
   /*
@@ -190,6 +212,19 @@ void wolterMover::rotate(float* out, float a) {
   out[1] = temp[0]*sin(a) + temp[1]*cos(a);
 }
 
+float wolterMover::heading(float* in) {
+  float x = in[0], y = in[1];
+  if(x==0) x+=0.00001; // prevent div by zero
+  float ang = atan(y/x);
+  if(x>0 && y>0) {
+    return ang;
+  } else if(x<0) {
+    return PI+ang;
+  } else {
+    return TWO_PI+ang;
+  }
+}
+
 float wolterMover::dot(float* a, float* b) {
   return a[0]*b[0] + a[1]*b[1];
 }
@@ -209,11 +244,8 @@ void wolterMover::sub(float* out, float* in) {
   out[1] -= in[1];
 }
 
-void wolterMover::setMag(float* in, float setM) {
-  double currMag = sqrt(in[0]*in[0] + in[1]*in[1]);
-//  Serial.print("vx=");Serial.print(vel[0],4);Serial.print("#");
-//  Serial.print("vy=");Serial.print(vel[1],4);Serial.print("#");
-//  Serial.print("|v|=");Serial.print(currMag,4);Serial.print("#");
-  in[0] *= setM/currMag;
-  in[1] *= setM/currMag;
+void wolterMover::setMag(float* out, float setM) {
+  double currMag = sqrt(out[0]*out[0] + out[1]*out[1]);
+  out[0] *= setM/currMag;
+  out[1] *= setM/currMag;
 }
